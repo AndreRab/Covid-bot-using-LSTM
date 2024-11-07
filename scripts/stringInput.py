@@ -1,23 +1,26 @@
 import pyperclip # type: ignore
+import time
+from const import *
 
 class String:
-    def __init__(self, visible_lines_count = 9, input_box_height=50, input_box_width = 600):
+    def __init__(self, font, visible_lines_count = 9, input_box_height=50, input_box_width = 600):
         self.user_text = ""
         self.lines = [""]
         self.scroll_index = 0
         self.visible_lines_count = visible_lines_count
         self.input_box_height = input_box_height
         self.input_box_width = input_box_width
+        self.input_box = start_input_box.copy()
+        self.font = font
 
-    def add(self, char, actual_height, font):
+    def add(self, char):
         self.lines[-1] += char
-        if font.size(self.lines[-1])[0] > self.input_box_width:
+        if self.font.size(self.lines[-1])[0] > self.input_box_width:
             self.lines.append("")
-            if actual_height != self.input_box_height * self.visible_lines_count:
-                return True
+            if self.input_box.height != self.input_box_height * self.visible_lines_count:
+                self.input_box.height += input_box_height
             else:
                 self.scroll_index += 1
-        return False
 
     def pop(self):
         if len(self.lines[-1]) > 0:
@@ -26,27 +29,28 @@ class String:
             self.lines.pop()
             if len(self.lines) >= self.visible_lines_count:
                 self.scroll_index -= 1
-                return False
-            return True
-        return False
+                return
+            self.input_box.height -= input_box_height
+        return 
 
     def submit(self):
         result = "".join(self.lines)
         self.scroll_index = 0
         self.lines = [""]
+        self.input_box = start_input_box.copy()
         return result
     
     def copy(self):
         pyperclip.copy("\n".join(self.lines))
         print("Text copied to clipboard")
 
-    def paste(self, actual_height, font):
+    def paste(self):
         count = 0
         clipboard_text = pyperclip.paste() 
         for char in clipboard_text:
             if char == '\n':
                 self.lines.append("")
-                if actual_height + count * self.input_box_height != self.input_box_height * self.visible_lines_count:
+                if self.input_box.height + count * self.input_box_height != self.input_box_height * self.visible_lines_count:
                     count += 1
                     
                 if len(self.lines) - self.scroll_index > self.visible_lines_count:
@@ -54,15 +58,15 @@ class String:
 
             else:
                 self.lines[-1] += char
-                if font.size(self.lines[-1])[0] > self.input_box_width:
+                if self.font.size(self.lines[-1])[0] > self.input_box_width:
                     self.lines.append("")
-                    if actual_height + count * self.input_box_height != self.input_box_height * self.visible_lines_count:
+                    if self.input_box.height + count * self.input_box_height != self.input_box_height * self.visible_lines_count:
                         count += 1    
 
                     if len(self.lines) - self.scroll_index > self.visible_lines_count:
                         self.scroll_index += 1
 
-        return count
+        self.input_box.height += input_box_height * count
     
     def scroll_up(self):
         if self.scroll_index > 0:
@@ -77,3 +81,25 @@ class String:
     
     def lines_len(self):
         return len(self.lines) - self.scroll_index
+    
+    def draw_input_box(self, screen):
+        pygame.draw.rect(screen, input_box_color, self.input_box)
+        for i, line in enumerate(self.visible_range()):
+            line_for_render = line + '|' if self.lines_len() - 1 == i else line
+            text_surface = self.font.render(line_for_render, True, text_color)
+            screen.blit(text_surface, (self.input_box.x + 10, self.input_box.y + 10 + i * input_box_height))
+    
+    def generate_response_continuously(self, text, screen):
+        for symbol in text:
+            self.add(symbol)
+            self.draw_input_box(screen)  
+            pygame.display.flip()        
+            pygame.time.delay(10) 
+
+
+    def reset_line(self):
+        self.scroll_index = 0
+        self.lines = [""]
+        self.input_box = start_input_box.copy()
+
+

@@ -9,15 +9,16 @@ class Application:
         self.screen = pygame.display.set_mode(display_size)
 
         self.language_model_manager = language_model_manager
-
+        self.response = ""
+        
         self.font = pygame.font.Font(None, input_box_height)
-        self.start_input_box = pygame.Rect(75, 100, input_box_width, input_box_height)
-        self.input_box = self.start_input_box.copy()
-        self.input_string = String(visible_lines_count, input_box_height, input_box_width - width_eps)
+        self.input_string = String(self.font, visible_lines_count, input_box_height, input_box_width - width_eps)
         
         self.running = True
         self.showResult = False
         self.isSpam = False
+        self.started_generate = False
+        
 
     def start(self):
         while self.running:
@@ -28,20 +29,18 @@ class Application:
 
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_BACKSPACE:
-                            if self.input_string.pop():
-                                self.input_box.height -= input_box_height
+                            self.input_string.pop()
 
                         elif event.key == pygame.K_RETURN:
                             str = self.input_string.submit()
-                            print(self.language_model_manager.generate_response(str))
-                            self.input_box = self.start_input_box.copy()
+                            self.response = self.language_model_manager.generate_response(str)
                             self.showResult = True
 
                         elif event.key == pygame.K_c and pygame.key.get_mods() & pygame.KMOD_CTRL:
                             self.input_string.copy()
 
                         elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_CTRL:
-                            self.input_box.height += input_box_height * self.input_string.paste(self.input_box.height, self.font)
+                            self.input_string.paste()
 
                         elif event.key == pygame.K_UP:
                             self.input_string.scroll_up()
@@ -49,17 +48,28 @@ class Application:
                             self.input_string.scroll_down()
 
                         else:
-                            if self.input_string.add(event.unicode, self.input_box.height, self.font):
-                                self.input_box.height += input_box_height
+                            self.input_string.add(event.unicode)
 
                     self.draw_parts()
             else:
+                if not self.started_generate:
+                    self.input_string.generate_response_continuously(self.response, self.screen)
+                    self.started_generate = True
+
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.running = False
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_BACKSPACE:
                             self.showResult = False
+                            self.started_generate = False
+                            self.input_string.reset_line()
+                    
+                    elif event.key == pygame.K_UP:
+                        self.input_string.scroll_up()
+                    
+                    elif event.key == pygame.K_DOWN:
+                        self.input_string.scroll_down()
                     
                     self.draw_parts()
 
@@ -69,27 +79,20 @@ class Application:
         self.screen.fill(bg_color)
         
         if not self.showResult:
-            self.draw_input_box()
             self.draw_title()
         else:
-            self.draw_spam_check_result()
-            
+            self.draw_answer()
+        
+        self.input_string.draw_input_box(self.screen)
         pygame.display.flip()
-
-    def draw_input_box(self):
-        pygame.draw.rect(self.screen, input_box_color, self.input_box)
-        for i, line in enumerate(self.input_string.visible_range()):
-            line_for_render = line + '|' if self.input_string.lines_len() - 1 == i else line
-            text_surface = self.font.render(line_for_render, True, text_color)
-            self.screen.blit(text_surface, (self.input_box.x + 10, self.input_box.y + 10 + i * input_box_height))
 
 
     def draw_title(self):
-        for i in range(2):
+        for i in range(len(title_text)):
             label_surface = self.font.render(title_text[i], True, text_color)
             self.screen.blit(label_surface, title_text_coordinates[i]) 
 
-    def draw_spam_check_result(self):        
-        for i in range(2):
-            label_surface = self.font.render(spam_checker_text[i], True, text_color)
-            self.screen.blit(label_surface, spam_checker_text_coordinates[i]) 
+    def draw_answer(self):        
+        for i in range(len(answer_text)):
+            label_surface = self.font.render(answer_text[i], True, text_color)
+            self.screen.blit(label_surface, answer_text_coordinates[i]) 

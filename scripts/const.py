@@ -1,4 +1,5 @@
 import json
+import pygame
 
 text_color = (0, 0, 0)
 bg_color = (255, 255, 255)
@@ -13,8 +14,10 @@ visible_lines_count = 9
 display_size = (850, 600)
 
 title_text = ['Write or copy-paste your question about COVID-19', 'For moving down use arrows']
-spam_checker_text = ['Check the console for response :)', 'For the new check process press backspace']
+answer_text = ['Asnwer (for the new question press backspace):']
 
 
 title_text_coordinates = [(10, 10), (170, 50)]
-spam_checker_text_coordinates = [[(30, 100), (70, 100)] , (50, 150)] 
+answer_text_coordinates = [(30, 30)] 
+
+start_input_box = pygame.Rect(75, 100, input_box_width, input_box_height)
