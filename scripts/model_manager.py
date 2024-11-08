@@ -46,10 +46,34 @@ class ModelManager():
             output = [self.ind2word[index.item()] + " " for index in indexes]
 
             if '<eos>' + " " in output:
-                output = output[:output.index('<eos>' + " ")]
+                output = output[:output.index('<eos>' + " ") + 1]
 
-            reresponse = ''.join(output)
+            reresponse = self.data_postproc(''.join(output))
             return reresponse
+        
+    def data_postproc(self, text):
+        signs = '\'()[].,?!:; '
+        result = ""
+        is_newSentence = True
+
+        words = text.split(" ")
+        for word in words:
+            if word == '<bos>' or word == '<eos>':
+                pass
+            elif word == '<unk>':
+                result += 'COVID19' + " "
+            elif word in signs:
+                result = result[:-1]
+                result += word + " "
+                if word == '.':
+                    is_newSentence = True
+            elif is_newSentence:
+                result += word[0].upper() + word[1:] + " "
+                is_newSentence = False
+            else:
+                result += word + " "
+
+        return result
     
     def string_preproc(self, str, max_len = 256):
         processed_text = str.lower().translate(

@@ -1,5 +1,4 @@
 import pyperclip # type: ignore
-import time
 from const import *
 
 class String:
@@ -12,6 +11,7 @@ class String:
         self.input_box_width = input_box_width
         self.input_box = start_input_box.copy()
         self.font = font
+        self.cursos_index = [0, 0]
 
     def add(self, char):
         self.lines[-1] += char
@@ -75,6 +75,9 @@ class String:
     def scroll_down(self):
         if self.scroll_index < max(0, len(self.lines) - self.visible_lines_count):
             self.scroll_index += 1
+
+    def scroll_left(self):
+        pass
 
     def visible_range(self):
         return self.lines[self.scroll_index:self.scroll_index + min(self.visible_lines_count, len(self.lines))]

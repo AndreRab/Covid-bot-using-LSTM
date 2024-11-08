@@ -46,6 +46,12 @@ class Application:
                             self.input_string.scroll_up()
                         elif event.key == pygame.K_DOWN:
                             self.input_string.scroll_down()
+                        elif event.key == pygame.K_LEFT:
+                            pass
+                            # self.input_string.scroll_up()
+                        elif event.key == pygame.K_RIGHT:
+                            pass
+                            # self.input_string.scroll_down()
 
                         else:
                             self.input_string.add(event.unicode)
@@ -64,12 +70,10 @@ class Application:
                             self.showResult = False
                             self.started_generate = False
                             self.input_string.reset_line()
-                    
-                    elif event.key == pygame.K_UP:
-                        self.input_string.scroll_up()
-                    
-                    elif event.key == pygame.K_DOWN:
-                        self.input_string.scroll_down()
+                        elif event.key == pygame.K_UP:
+                            self.input_string.scroll_up()
+                        elif event.key == pygame.K_DOWN:
+                            self.input_string.scroll_down()
                     
                     self.draw_parts()
 
